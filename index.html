@@ -3,56 +3,127 @@
 <title>WIOM Tax Help (smart intent)</title>
 <style>
 
-/* Fullscreen background fix */
-html, body {
-  height: 100%;
-  margin: 0;
-}
-
-body {
+/* ---- Page background (full bleed image) ---- */
+html, body { height: 100%; margin: 0; }
+body{
   font-family: Arial, system-ui, Segoe UI, Roboto;
   background: url("wiom-bg.jpg") center center / cover no-repeat fixed;
-  background-color: #f3f6fc; /* fallback color */
+  background-color:#f3f6fc; /* fallback */
 }
+body::before{
+  content:""; position:fixed; inset:0;
+  background: rgba(0,0,0,0.18);
+  pointer-events:none; z-index:0;
+}
+/* Make common wrappers transparent so photo shows through */
+main, #main, #root, .container, .wrapper { background: transparent !important; }
 
-/* Optional semi-transparent overlay */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.25);
-  pointer-events: none;
-  z-index: 0;
+/* ---- Floating chat button ---- */
+#b{
+  position:fixed; right:20px; bottom:20px;
+  background:#D9008D; color:#fff; border-radius:50%;
+  width:68px; height:68px; display:flex; align-items:center; justify-content:center;
+  cursor:pointer; box-shadow:0 12px 28px rgba(0,0,0,.35);
+  z-index:1000; transition:transform .2s ease, box-shadow .2s ease, background .2s ease;
 }
+#b:hover{ transform:scale(1.08); box-shadow:0 16px 36px rgba(0,0,0,.45); }
+#b img{ width:36px; height:36px; object-fit:contain; display:block; }
+@keyframes ping{ 0%{transform:scale(1);box-shadow:0 0 0 0 rgba(37,99,235,.5)} 70%{transform:scale(1.02);box-shadow:0 0 0 16px rgba(217,0,141,0)} 100%{transform:scale(1);box-shadow:0 0 0 0 rgba(217,0,141,0)} }
+#b.attn{ animation: ping 2s ease-in-out 2; }
 
-/* Ensure containers are transparent */
-main, #main, #root, .container, .wrapper {
-  background: transparent !important;
+/* ---- Chat window ---- */
+#w{
+  position:fixed; right:16px; bottom:84px; width:560px; max-width:96vw;
+  background:#ffffff; border:1px solid #d1d5db;
+  border-radius:16px; overflow:hidden;
+  box-shadow:0 20px 50px rgba(0,0,0,.35);
+  display:none; flex-direction:column; z-index:1100;
+  transform:scale(.96); opacity:0; transition:transform .25s ease, opacity .25s ease;
 }
+#w.show{ transform:scale(1); opacity:1; }
 
-/* Chat container */
-#w {
-  position: fixed;
-  right: 16px;
-  bottom: 84px;
-  width: 440px;
-  max-width: 96vw;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid #ddd;
-  border-radius: 12px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
-  display: none;
-  flex-direction: column;
-  z-index: 1;
+/* Header bar */
+.h{
+  background:#D9008D; color:#fff; padding:12px 14px;
+  display:flex; gap:8px; align-items:center; font-weight:600;
 }
+.h select{ margin-left:auto; background:rgba(255,255,255,.15); color:#fff; border:1px solid rgba(255,255,255,.4); border-radius:6px; padding:4px 6px; }
+#x{ background:transparent; border:none; color:#fff; font-size:18px; line-height:1; cursor:pointer; margin-left:8px; }
+
+/* Messages area */
+.m{ height:520px; overflow:auto; padding:14px; background:#f8fafc; }
+
+/* Input bar */
+.i{
+  display:flex; gap:10px; padding:14px; background:#fff; border-top:1px solid #e5e7eb;
+}
+.i input{
+  flex:1; padding:12px 14px; border:1px solid #d1d5db; border-radius:999px; outline:none;
+  background:#fff;
+}
+.i input:focus{ border-color:#D9008D; box-shadow:0 0 0 3px rgba(217,0,141,.2); }
+.i button{
+  background:#D9008D; color:#fff; border:none; border-radius:12px; padding:12px 16px; cursor:pointer; font-weight:600;
+}
+.i button:hover{ filter:brightness(1.05); }
+
+/* Message bubbles */
+.msg{ margin:8px 0; }
+.bub{ display:inline-block; padding:10px 12px; border-radius:12px; max-width:94%; }
+.bot .bub{ background:#fff; border:1px solid #e5e7eb; }
+.user .bub{ background:#ffe6f3; border:1px solid #ffd3eb; text-align:right; }
+
+/* Chips row */
+.sug{ display:flex; flex-wrap:wrap; gap:8px; padding:8px; }
+.chip{
+  border:1px solid #d1d5db; border-radius:9999px; padding:8px 12px; font-size:13px;
+  cursor:pointer; background:#fff; transition:background .15s ease, box-shadow .15s ease, transform .05s ease;
+}
+.chip:hover{ background:#ffe9f6; box-shadow:0 1px 0 rgba(0,0,0,.03); transform:translateY(-1px); }
+
+/* Links */
+a{ color:#D9008D; }
+
+
+
+/* --- Custom language dropdown (magenta + white) --- */
+.lang-dd{ position:relative; margin-left:auto; }
+.lang-dd button{
+  background:#D9008D; color:#fff; border:1px solid rgba(255,255,255,.5);
+  border-radius:10px; padding:6px 10px; display:flex; align-items:center; gap:8px;
+  cursor:pointer; box-shadow: inset 0 0 0 1px rgba(255,255,255,.2);
+}
+.lang-dd button:after{ content:"▾"; font-size:12px; opacity:.9; }
+.lang-menu{
+  position:absolute; right:0; top:100%; margin-top:8px; min-width:140px;
+  background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:6px;
+  box-shadow:0 16px 34px rgba(0,0,0,.25); display:none; z-index:1200;
+}
+.lang-menu.show{ display:block; }
+.lang-opt{ padding:10px 12px; border-radius:8px; cursor:pointer; }
+.lang-opt:hover{ background:#ffe6f3; } /* light magenta hover */
+
+
+
+/* Ensure dropdown text is dark (not inherited white from header) */
+.lang-menu, .lang-menu .lang-opt { color:#111 !important; }
+.lang-opt.active{ background:#ffd3eb; font-weight:600; }
 
 </style>
 </head>
 <body>
-<div id="b">💬</div>
+<div id="b" class="attn"><img src="img/chat-icon.png" alt="Chat" onerror="this.style.display='none'; this.parentNode.textContent='💬';"></div>
 <div id="w">
   <div class="h">WIOM Tax Help
-    <select id="lang">
+    <div class="lang-dd" id="langdd">
+      <button id="langBtn"><span id="langLabel">EN</span></button>
+      <div class="lang-menu" id="langMenu">
+        <div class="lang-opt" data-v="en">EN</div>
+        <div class="lang-opt" data-v="hi">हिन्दी</div>
+        <div class="lang-opt" data-v="hn">Hinglish</div>
+      </div>
+    </div>
+    <select id="lang" style="display:none">
       <option value="en">EN</option><option value="hi">हिन्दी</option><option value="hn">Hinglish</option>
     </select>
     <button id="x" style="background:transparent;border:none;color:#fff;font-size:16px">✖</button>
@@ -194,7 +265,19 @@ function send(){
   add('bot', lang==='hi'?'माफ़ कीजिए, समझ नहीं पाया। ऊपर दिए विकल्पों में से चुनें या फिर से पूछें।':'hn'===lang?'Sorry, samajh nahi aaya — upar ke options me se choose karen ya phir se poochein.':'Sorry, I didn’t get that. Pick a chip above or try again.');
 }
 
-$('b').onclick=()=>{const w=$('w');w.style.display=w.style.display?'':'flex'; if(w.style.display){$('m').innerHTML=''; greet();}};
+$('b').onclick=()=>{
+  const w=$('w');
+  const isOpen = (w.style.display && w.style.display !== 'none');
+  if (isOpen){
+    w.classList.remove('show');
+    w.style.display='';
+  } else {
+    w.style.display='flex';
+    setTimeout(()=>w.classList.add('show'), 10);
+    $('m').innerHTML='';
+    greet();
+  }
+};
 $('x').onclick=()=>{$('w').style.display='none'};
 $('s').onclick=send; $('t').addEventListener('keydown',e=>{if(e.key==='Enter')send()});
 $('lang').onchange=e=>{lang=e.target.value; $('m').innerHTML=''; greet();};
@@ -242,4 +325,57 @@ $('lang').onchange=e=>{lang=e.target.value; $('m').innerHTML=''; greet();};
  }catch(e){}
 })();</script>
 
+<script>
+
+// --- Custom language dropdown controller ---
+(function(){
+  try{
+    const dd = document.getElementById('langdd');
+    const btn = document.getElementById('langBtn');
+    const menu = document.getElementById('langMenu');
+    const label = document.getElementById('langLabel');
+    const sel = document.getElementById('lang'); // hidden fallback select
+
+    function setLang(v, text){
+      try{ lang = v; }catch(_){}
+      if(sel) sel.value = v;
+      if(label) label.textContent = text || (v==='hi'?'हिन्दी': (v==='hn'?'Hinglish':'EN'));
+      if(menu) menu.classList.remove('show');
+      try{ document.getElementById('m').innerHTML=''; greet(); }catch(_){}
+    }
+
+    if(btn && menu && dd){
+      btn.addEventListener('click', function(e){ e.stopPropagation(); menu.classList.toggle('show'); });
+      document.addEventListener('click', function(e){ if(!dd.contains(e.target)){ menu.classList.remove('show'); } });
+      menu.querySelectorAll('.lang-opt').forEach(function(opt){
+        opt.addEventListener('click', function(){
+          const v = this.getAttribute('data-v') || 'en';
+          setLang(v, this.textContent.trim());
+        });
+      });
+    }
+    // initialize from select value if exists
+    if(sel && sel.value){ setLang(sel.value); }
+  }catch(e){}
+})();
+
+</script>
+<script>
+
+try{
+  (function(){
+    const sel = document.getElementById('lang');
+    const menu = document.getElementById('langMenu');
+    function markActive(){
+      const v = (typeof lang!=='undefined' ? lang : (sel? sel.value : 'en'));
+      menu?.querySelectorAll('.lang-opt').forEach(el=>{
+        el.classList.toggle('active', el.getAttribute('data-v')===v);
+      });
+    }
+    document.addEventListener('click', markActive);
+    markActive();
+  })();
+}catch(e){}
+
+</script>
 </body></html>
