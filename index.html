@@ -2,18 +2,91 @@
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>WIOM Tax Help (smart intent)</title>
 <style>
- body{font-family:Arial,system-ui,Segoe UI,Roboto; margin:0}
- #b{position:fixed;right:16px;bottom:16px;background:#2563eb;color:#fff;border-radius:50%;width:56px;height:56px;display:flex;align-items:center;justify-content:center;cursor:pointer}
- #w{position:fixed;right:16px;bottom:84px;width:440px;max-width:96vw;background:#fff;border:1px solid #ddd;border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,.2);display:none;flex-direction:column}
- .h{background:#2563eb;color:#fff;padding:10px;border-top-left-radius:12px;border-top-right-radius:12px;display:flex;gap:8px;align-items:center}
- .h select{margin-left:auto}
- .m{height:460px;overflow:auto;padding:10px;background:#f8fafc}
- .i{display:flex;gap:6px;padding:10px;background:#fff;border-top:1px solid #eee}
- .i input{flex:1;padding:8px;border:1px solid #ddd;border-radius:8px}
- .i button{background:#2563eb;color:#fff;border:none;border-radius:8px;padding:8px 12px}
- .msg{margin:6px 0}.bot{background:#fff;border:1px solid #eee}.user{background:#eaf1ff}.bub{display:inline-block;padding:8px 10px;border-radius:10px;max-width:94%}
- .sug{display:flex;flex-wrap:wrap;gap:6px;padding:8px}.chip{border:1px solid #ddd;border-radius:999px;padding:6px 10px;font-size:12px;cursor:pointer;background:#fff}
- a{color:#2563eb}
+
+    /* Fullscreen background like wiom.in */
+    body {
+      margin: 0;
+      font-family: Arial, system-ui, Segoe UI, Roboto;
+      background: url("img/wiom-bg.jpg") center center / cover no-repeat fixed;
+      background-color: #f3f6fc; /* fallback */
+    }
+
+    /* Optional semi-transparent overlay */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.25);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Chat container on top */
+    #w {
+      position: fixed;
+      right: 16px;
+      bottom: 84px;
+      width: 440px;
+      max-width: 96vw;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+      display: none;
+      flex-direction: column;
+      z-index: 1;
+    }
+
+    .h {
+      background: #2563eb;
+      color: #fff;
+      padding: 10px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+    }
+
+    .m {
+      height: 460px;
+      overflow: auto;
+      padding: 10px;
+      background: rgba(248, 250, 252, 0.85);
+    }
+
+    .i {
+      display: flex;
+      gap: 6px;
+      padding: 10px;
+      background: #fff;
+      border-top: 1px solid #eee;
+    }
+
+    #b {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      background: #2563eb;
+      color: #fff;
+      border-radius: 50%;
+      width: 56px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 1;
+    }
+
+    .msg { margin: 6px 0; }
+    .bot { background: #fff; border: 1px solid #eee; }
+    .user { background: #eaf1ff; }
+    .bub { display: inline-block; padding: 8px 10px; border-radius: 10px; max-width: 94%; }
+    .sug { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; }
+    .chip { border: 1px solid #ddd; border-radius: 999px; padding: 6px 10px; font-size: 12px; cursor: pointer; background: #fff; }
+    a { color: #2563eb; }
+
 </style>
 </head>
 <body>
