@@ -1,0 +1,236 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WIOM Tax Help (smart intent)</title>
+<style>
+
+  body {
+    font-family: Arial, system-ui, Segoe UI, Roboto;
+    margin: 0;
+    /* Set background image */
+    background: url("img/wiom-bg.jpg") center center / cover no-repeat fixed;
+    background-color: #f3f6fc; /* fallback */
+  }
+
+  /* Optional overlay for readability */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.25); /* dark overlay */
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Chat container on top */
+  #w {
+    position: fixed;
+    right: 16px;
+    bottom: 84px;
+    width: 440px;
+    max-width: 96vw;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+    display: none;
+    flex-direction: column;
+    z-index: 1;
+  }
+
+</style>
+</head>
+<body>
+<div id="b">💬</div>
+<div id="w">
+  <div class="h">WIOM Tax Help
+    <select id="lang">
+      <option value="en">EN</option><option value="hi">हिन्दी</option><option value="hn">Hinglish</option>
+    </select>
+    <button id="x" style="background:transparent;border:none;color:#fff;font-size:16px">✖</button>
+  </div>
+  <div id="m" class="m"></div>
+  <div class="i"><input id="t" placeholder="Ask / पूछें / Pooche…"><button id="s">Send</button></div>
+</div>
+
+<script>
+const it = 'https://www.incometax.gov.in/iec/foportal/';
+const it_link_status = 'https://eportal.incometax.gov.in/iec/foservices/#/pre-login/bl-link-aadhaar';
+const gst = 'https://services.gst.gov.in/services/searchtpbypan';
+
+const A = {
+  // Existing answers (shortened for clarity, kept as in your file)
+  tds_en: `When WIOM gives you payout, some small tax (TDS) is cut as per government rule. This tax is cut under Section 194O.<br>
+  First, your total earning is divided by 1.18 to find taxable income. Then TDS is charged.<br><br>
+  <b>If your PAN is operative (linked with Aadhaar)</b><br>
+  Example – You earned ₹50,000<br>
+  Step 1: ₹50,000 ÷ 1.18 = ₹42,373 (taxable income)<br>
+  Step 2: TDS @0.1% = ₹42,373 × 0.1% = ₹42 (–)<br>
+  So from ₹50,000, only ₹42 will be cut, you get around ₹49,958 (+)<br><br>
+  <b>If your PAN is inoperative (NOT linked with Aadhaar)</b><br>
+  Example – You earned ₹50,000<br>
+  Step 1: ₹50,000 ÷ 1.18 = ₹42,373 (taxable income)<br>
+  Step 2: TDS @5% = ₹42,373 × 5% = ₹2,119 (–)<br>
+  So from ₹50,000, ₹2,119 will be cut, you get only ₹47,881 (+)<br><br>
+  <i>Whatever TDS is deducted will also appear in Form 16A (TDS Certificate).</i>`,
+  tds_hi: `जब WIOM payout देता है, सरकार के नियम के अनुसार TDS लगता है (धारा 194O)। पहले earning को 1.18 से भाग देकर taxable income निकाली जाती है, फिर TDS।<br><br>
+  <b>PAN ऑपरेटिव</b>: ₹50,000 ÷ 1.18 = ₹42,373 → 0.1% = ₹42 कटेगा → लगभग ₹49,958 मिलेगा।<br>
+  <b>PAN नॉन-ऑपरेटिव</b>: वही income पर 5% = ₹2,119 कटेगा → लगभग ₹47,881 मिलेगा।<br><i>कटौती Form 16A में दिखेगी।</i>`,
+  tds_hn: `WIOM payout par Section 194O ke hisaab se TDS lagta hai. Pehle earning/1.18 = taxable income. PAN operative par 0.1% (₹42), inoperative par 5% (₹2,119). Form 16A me dikhega.`,
+
+  // "Form 16/16A = TDS certificate "+ how to download from site - basic note (kept)
+  f16_en: `You don’t need to download it yourself. Form 16A (TDS Certificate) is emailed within 45 days after the end of every quarter. To <b>verify TDS</b> yourself → log in to the <a href="${it}" target="_blank" rel="noopener">Income Tax Portal</a> → Download <b>Form 26AS</b> / <b>AIS</b> showing all TDS against your PAN.<br><br>
+  <u>Quick steps (26AS)</u>: Login → e-File → Income Tax Forms → <i>View Form 26AS</i> → Proceed → Select AY → Download.`,
+  f16_hi: `खुद डाउनलोड करने की जरूरत नहीं—तिमाही खत्म होने के 45 दिन के अंदर Form 16A ईमेल कर दी जाती है। <b>TDS verify</b> करने के लिए खुद <a href="${it}" target="_blank" rel="noopener">Income Tax Portal</a> में लॉगिन करें → <b>Form 26AS</b> / <b>AIS</b> डाउनलोड करें (आपके PAN पर सारी TDS entry दिखती हैं)।<br><br>
+  <u>त्वरित स्टेप (26AS)</u>: Login → e-File → Income Tax Forms → <i>View Form 26AS</i> → Proceed → AY चुनें → Download.`,
+  f16_hn: `Khud download nahi karna padta; quarter ke 45 din ke andar Form 16A email aa jata hai.TDS dekhna</b> ho to <a href="${it}" target="_blank" rel="noopener">Income Tax Portal</a> par login karein → <b>Form 26AS</b> / <b>AIS</b> download karein.<br><br>
+  <u>26AS Quick Steps</u>: Login → e-File → Income Tax Forms → <i>View Form 26AS</i> → Proceed → AY select → Download.`,
+
+  // NEW: Exact TDS visibility Q/A (as provided by you)
+  tds_vis_hi: `TDS aapko do jagah dikhai dega – Form 16 – jo aapke employer/ deductor ke dwara issue kiya jata hai. Income Tax Portal par Form 26AS – jisme aapke PAN ke against saari TDS details hoti hain. 👉 Income Tax Portal link: <a href="${it}" target="_blank" rel="noopener">${it}</a>`,
+  tds_vis_en: `You can see TDS at two places – Form 16 (issued by your employer/deductor) and on the Income Tax Portal in Form 26AS (shows all TDS against your PAN). 👉 Income Tax Portal link: <a href="${it}" target="_blank" rel="noopener">${it}</a>`,
+  tds_vis_hn: `TDS do jagah dikhega – Form 16 (employer/deductor issue karta hai) aur Income Tax Portal par Form 26AS (PAN ke against sabhi TDS details). 👉 Link: <a href="${it}" target="_blank" rel="noopener">${it}</a>`,
+
+  // NEW: Bank change/addition documents (with Company optional note)
+  bank_docs_en: `<b>Bank Change / Addition – Required documents</b><br>
+  • <b>Bank Statement</b> or <b>Passbook</b> or <b>Cancelled Cheque</b> (any one)<br>
+  • <b>Bank Profile Page</b> with PAN & Account No. (<i>mandatory for Individuals/Partnerships; optional for Pvt Ltd/Ltd Companies</i>)<br>
+  • <b>PAN Card Copy</b> matching the PAN registered with WIOM`,
+  bank_docs_hi: `<b>Bank Change / Addition के लिए ज़रूरी दस्तावेज़</b><br>
+  • <b>Bank Statement</b> / <b>Passbook</b> / <b>Cancel Cheque</b> (इनमें से कोई एक)<br>
+  • <b>Bank Profile Page</b> जिसमें PAN और Account No. हो (<i>Individual/Partnership के लिए अनिवार्य; Company (Pvt Ltd/Ltd) के लिए optional</i>)<br>
+  • <b>PAN Card Copy</b> जो WIOM में registered PAN से match करती हो`,
+  bank_docs_hn: `<b>Bank Change / Addition ke docs</b><br>
+  • Bank Statement / Passbook / Cancel Cheque (koi ek)<br>
+  • Bank Profile Page with PAN & A/c No. (<i>Individual/Partnership ke liye mandatory; Company (Pvt Ltd/Ltd) ke liye optional</i>)<br>
+  • PAN Card Copy jo WIOM me registered PAN se match karti ho`,
+
+  // Validation links keep
+  val_en: `Validate PAN–Aadhaar on the <a href="${it_link_status}" target="_blank" rel="noopener">Income Tax Portal (Link Aadhaar Status)</a> and GSTIN on the <a href="${gst}" target="_blank" rel="noopener">GST Portal (Search by PAN)</a>.<br><br>
+  If PAN is non-operative → higher TDS (5%) applies. If GSTIN is inactive → you cannot charge GST on bills.`,
+  val_hi: `<a href="${it_link_status}" target="_blank" rel="noopener">Income Tax Portal → Link Aadhaar Status</a> पर PAN–Aadhaar चेक करें और <a href="${gst}" target="_blank" rel="noopener">GST Portal → Search by PAN</a> पर GSTIN status देखें।<br><br>
+  PAN non-operative हुआ तो 5% TDS; GSTIN inactive हुआ तो GST चार्ज नहीं कर सकते।`,
+  val_hn: `<a href="${it_link_status}" target="_blank" rel="noopener">IT portal</a> par PAN–Aadhaar status aur <a href="${gst}" target="_blank" rel="noopener">GST portal</a> par GSTIN status check karein. PAN non-operative → 5% TDS; GSTIN inactive → GST charge nahi.`,
+
+  rate_en: `GST on internet services is <b>18%</b>.`,
+  rate_hi: `इंटरनेट सेवाओं पर GST <b>18%</b> है।`,
+  rate_hn: `Internet services par GST <b>18%</b> hota hai.`,
+
+  inv_en: `<b>Who should issue GST invoice?</b><br>
+  For e-commerce business covered under 194O, WIOM deducts <b>TCS 0.5%</b> of taxable income.<br><br>
+  • WIOM issues invoice for WIOM share only.<br>
+  • Partner (LCO) issues invoice to the customer for <b>partner share only</b>.<br><br>
+  <b>Example</b>: Customer recharge ₹575 → WIOM share ₹200 → WIOM issues ₹200 invoice; Partner share ₹375 → Partner issues <b>₹375 invoice to customer</b>.`,
+  inv_hi: `<b>GST इनवॉइस किसे जारी करनी है?</b><br>
+  194O के अंतर्गत e-commerce पर WIOM <b>TCS 0.5%</b> deduct करता है।<br><br>
+  • WIOM अपने हिस्से के लिए इनवॉइस करता है।<br>
+  • पार्टनर (LCO) ग्राहक को केवल <b>अपने हिस्से</b> की इनवॉइस करेगा।<br><br>
+  <b>उदाहरण</b>: रिचार्ज ₹575 → WIOM ₹200 की इनवॉइस; पार्टनर शेयर ₹375 → पार्टनर <b>₹375 की इनवॉइस ग्राहक को</b> जारी करेगा।`,
+  inv_hn: `<b>Invoice kisko issue karni hai?</b><br>
+  194O cover me WIOM <b>TCS 0.5%</b> deduct karta hai.<br><br>
+  • WIOM apne share ki invoice karta hai.<br>
+  • Partner (LCO) customer ko <b>sirf apne share</b> ki invoice karega.<br><br>
+  <b>Example</b>: Recharge ₹575 → WIOM ₹200 invoice; Partner share ₹375 → Partner <b>₹375 ki invoice</b> customer ko dega.`
+};
+
+const FAQ = [
+  {key:'tds',  q:{en:'TDS section & rate on WIOM payouts', hi:'WIOM payout पर TDS सेक्शन और रेट', hn:'WIOM payout par TDS section & rate'}, a:{en:A.tds_en, hi:A.tds_hi, hn:A.tds_hn}},
+  {key:'f16',  q:{en:'Form 16A download (basic info)', hi:'Form 16A डाउनलोड (सामान्य)', hn:'Form 16A download info'}, a:{en:A.f16_en, hi:A.f16_hi, hn:A.f16_hn}},
+  // NEW Bank change/addition docs entry
+  {key:'bankdocs', q:{en:'Docs for Bank Change / Addition', hi:'Bank Change / Addition के लिए Documents', hn:'Bank change/addition ke docs'}, a:{en:A.bank_docs_en, hi:A.bank_docs_hi, hn:A.bank_docs_hn}},
+
+  {key:'val',  q:{en:'Validate PAN/GSTIN', hi:'PAN/GSTIN वैलिडेट करें', hn:'PAN/GSTIN validate kaise karein'}, a:{en:A.val_en, hi:A.val_hi, hn:A.val_hn}},
+  {key:'rate', q:{en:'GST rate on internet service and related charges', hi:'इंटरनेट सेवा और संबंधित शुल्क पर GST रेट', hn:'Internet service par GST rate'}, a:{en:A.rate_en, hi:A.rate_hi, hn:A.rate_hn}},
+  {key:'inv',  q:{en:'GST invoice issues to whom', hi:'GST इनवॉइस किसे जारी होगी', hn:'GST invoice kisko issue hoti hai'}, a:{en:A.inv_en, hi:A.inv_hi, hn:A.inv_hn}},
+];
+
+function detectIntent(text){
+  const s = (text||'').toLowerCase();
+  // existing checks
+  if (/(invoice|इनवॉइस|bill)\s*(kaise|kese|kais[e]?)?/.test(s) ||
+      /(kisko|kis ko|whom).*(invoice|bill)/.test(s) ||
+      /(invoice|bill).*(kisko|kis ko|whom|issue)/.test(s)) return 'inv';
+  if (/(tds|194o|deduct|कट|कटौती)/.test(s)) return 'tds';
+  if (/(16a|tds certificate|certificate|form\s*16)/.test(s)){
+    return 'f16';
+  }
+  if (/(validate|status|pan|aadhaar|aadhar|gstin|link)/.test(s)) return 'val';
+  if (/(gst).*(rate|percent|percentage|18|रेट)/.test(s) || /(internet|broadband).*(gst)/.test(s)) return 'rate';
+  // NEW intents
+if (/(bank).*(change|addition|add|update|badal|jod)/.test(s)) return 'bankdocs';
+  return null;
+}
+
+let lang='en';
+const $=id=>document.getElementById(id);
+function add(role,html){const d=document.createElement('div');d.className='msg '+(role==='user'?'user':'bot');d.innerHTML=`<div class='bub'>${html}</div>`;$('m').appendChild(d);$('m').scrollTop=$('m').scrollHeight;}
+function chips(){const wrap=document.createElement('div');wrap.className='sug';FAQ.forEach(item=>{const c=document.createElement('div');c.className='chip';c.textContent=item.q[lang];c.onclick=()=>{ $('t').value=item.q[lang]; send();};wrap.appendChild(c);});$('m').appendChild(wrap);} 
+function greet(){add('bot', lang==='hi'?'नमस्ते! यहाँ TDS, Form 16/16A, PAN/GST, GST rate और Invoice से जुड़े सवाल पूछें।':'hn'===lang?'Namaste! Yahan TDS, Form 16/16A, PAN/GST, GST rate aur invoice related sawaal poochiye.':'Hi! Ask about TDS, Form 16/16A, PAN/GST validation, GST rate, or who should invoice.'); chips();}
+function answerByKey(key){const item = FAQ.find(x=>x.key===key); return item ? item.a[lang] : null;}
+function findExact(q){return FAQ.find(x=>Object.values(x.q).some(v=>v.toLowerCase()===q.toLowerCase()));}
+
+function send(){
+  const q = $('t').value.trim(); if(!q) return;
+  add('user', q); $('t').value='';
+  const k = detectIntent(q);
+  if (k){ add('bot', answerByKey(k)); return; }
+  const ex = findExact(q); if (ex){ add('bot', ex.a[lang]); return; }
+  const s = q.toLowerCase().split(/\W+/).filter(Boolean);
+  let best={score:0, item:null};
+  for (const item of FAQ){
+    const hay = (item.q.en+' '+item.q.hi+' '+item.q.hn+' '+item.a.en).toLowerCase();
+    let sc=0; for (const tok of s){ if (hay.includes(tok)) sc++; }
+    if (sc>best.score){ best={score:sc,item}; }
+  }
+  if (best.item && best.score>0){ add('bot', best.item.a[lang]); return; }
+  add('bot', lang==='hi'?'माफ़ कीजिए, समझ नहीं पाया। ऊपर दिए विकल्पों में से चुनें या फिर से पूछें।':'hn'===lang?'Sorry, samajh nahi aaya — upar ke options me se choose karen ya phir se poochein.':'Sorry, I didn’t get that. Pick a chip above or try again.');
+}
+
+$('b').onclick=()=>{const w=$('w');w.style.display=w.style.display?'':'flex'; if(w.style.display){$('m').innerHTML=''; greet();}};
+$('x').onclick=()=>{$('w').style.display='none'};
+$('s').onclick=send; $('t').addEventListener('keydown',e=>{if(e.key==='Enter')send()});
+$('lang').onchange=e=>{lang=e.target.value; $('m').innerHTML=''; greet();};
+</script>
+
+<!-- Ticket runtime injection (keeps original chips) -->
+<style>
+.ticket-form{border:1px solid #e5e7eb;background:#fff;border-radius:12px;padding:12px;margin:8px 0}
+.ticket-form h4{margin:0 0 8px 0}
+.ticket-form label{display:block;font-size:12px;margin-top:8px}
+.ticket-form input,.ticket-form textarea{width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;margin-top:4px}
+.ticket-form button{margin-top:10px;background:#16a34a;color:#fff;border:none;border-radius:8px;padding:8px 12px;cursor:pointer}
+.ticket-kudos{font-size:13px;margin-top:6px}
+</style>
+<script>(function(){
+ try{
+   A.SHEET_WEBAPP_URL = A.SHEET_WEBAPP_URL || 'https://script.google.com/macros/s/AKfycbwUWx1xYd_KrmS9vJ0ymf1aFmUcLq1Pi-J9_AMRQzUgauRu-MthZQgoZQVh3DK7oFr-/exec';
+   A.ticket_en = {chip:'For any other concerns',form_title:'Raise a ticket & request callback',name:'Partner Name',email:'Email',phone:'Phone Number',issue:'Describe your issue',submit:'Submit Ticket',ok:'Your ticket has been raised. Our team will call back within 48 hours.',fail:'Ticket saved locally. Network error prevented server logging.'};
+   A.ticket_hi = {chip:'For any other concerns',form_title:'टिकट दर्ज करें और कॉल-बैक मांगे',name:'पार्टनर नाम',email:'ईमेल',phone:'फ़ोन नंबर',issue:'अपनी समस्या बताएं',submit:'टिकट सबमिट करें',ok:'आपका टिकट दर्ज हो गया है। हमारी टीम 48 घंटों के भीतर कॉल करेगी।',fail:'टिकट लोकल रूप से सेव हुआ; सर्वर पर भेजने में दिक्कत आई।'};
+   A.ticket_hn = {chip:'For any other concerns',form_title:'Ticket raise karein & callback mangayein',name:'Partner Name',email:'Email',phone:'Phone Number',issue:'Issue bataiye',submit:'Submit Ticket',ok:'Ticket raise ho gaya. Team 48 ghante me call karegi.',fail:'Ticket local me save hua, server par bhejne me error.'};
+ }catch(e){}
+ function _lang(){ try{ return document.getElementById('lang')?.value || 'en'; }catch(_){ return 'en'; } }
+ function _L(){ const l=_lang(); return l==='hi'?A.ticket_hi:(l==='hn'?A.ticket_hn:A.ticket_en); }
+ function formHTML(){ const d=_L(); return `<div class="ticket-form"><h4>${d.form_title}</h4><label>${d.name}<input data-wiom="name" placeholder="${d.name}"></label><label>${d.email}<input type="email" data-wiom="email" placeholder="${d.email}"></label><label>${d.phone}<input type="tel" data-wiom="phone" placeholder="${d.phone}"></label><label>${d.issue}<textarea rows="3" data-wiom="issue" placeholder="${d.issue}"></textarea></label><button onclick="wiomSubmitTicket(this)">${d.submit}</button><div class="ticket-kudos"></div></div>`; }
+ window.wiomSubmitTicket = async function(btn){
+   const f=btn.closest('.ticket-form'), d=_L();
+   const name=f.querySelector('[data-wiom="name"]').value.trim();
+   const email=f.querySelector('[data-wiom="email"]').value.trim();
+   const phone=f.querySelector('[data-wiom="phone"]').value.trim();
+   const issue=f.querySelector('[data-wiom="issue"]').value.trim();
+   if(!name||!email||!phone||!issue){ f.querySelector('.ticket-kudos').textContent='Please fill all fields.'; return; }
+   const id='WIOM-'+(Date.now().toString().slice(-6));
+   const ticket={id,partnerName:name,email,phone,issue,status:'Pending Callback',ts:new Date().toISOString()};
+   try{ const k='wiom_tickets'; const arr=JSON.parse(localStorage.getItem(k)||'[]'); arr.push(ticket); localStorage.setItem(k, JSON.stringify(arr)); }catch(e){}
+   let ok=false; try{ if(A.SHEET_WEBAPP_URL){ const body='payload='+encodeURIComponent(JSON.stringify(ticket)); const r=await fetch(A.SHEET_WEBAPP_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body}); ok=!!r.ok; } }catch(_){ ok=false; }
+   try{ add('bot', `${d.ok}<br><br><b>Ticket:</b> ${id}<br><b>Name:</b> ${name}<br><b>Email:</b> ${email}<br><b>Phone:</b> ${phone}`); }catch(_){ f.querySelector('.ticket-kudos').innerHTML=`${d.ok} (Ticket: ${id})`; }
+   if(!ok){ try{ add('bot', d.fail); }catch(_){ } }
+ };
+ try{
+   FAQ.unshift({key:'raise_concern', q:{en:A.ticket_en.chip, hi:A.ticket_hi.chip, hn:A.ticket_hn.chip}, a:{en:formHTML(), hi:formHTML(), hn:formHTML()}});
+ }catch(e){}
+ try{
+   const _detect=detectIntent;
+   window.detectIntent=function(text){ const k=_detect? _detect(text):null; if(k) return k; const s=(text||'').toLowerCase(); if(/(raise|callback|call\s*back|concern|issue|ticket)/.test(s)) return 'raise_concern'; return null; };
+ }catch(e){}
+})();</script>
+
+</body></html>
